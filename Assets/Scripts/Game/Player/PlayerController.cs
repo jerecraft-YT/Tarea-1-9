@@ -13,11 +13,13 @@ public class PlayerController : MonoBehaviour
     //cosas de jugador
 
     [SerializeField] private int baseDamage = 10;
-    [SerializeField] private int baseLive = 100;
-    [SerializeField] private int maxLive = 100;
+    [SerializeField] private int live = 100;
 
     [SerializeField] private float playerSpeed = 5f;
     [SerializeField] private float distanceToAttack = 3f;
+    [SerializeField] private float intialCooldownAttack = .15f;
+
+    private float cooldownAttack;
 
     private WeaponData weapon;
     private BaseStats stats;
@@ -29,9 +31,27 @@ public class PlayerController : MonoBehaviour
     {
         SetInput();
 
-        weapon = new(baseDamage);
+        SetWeapon();
 
+        SetStats();
+
+        SetComponents();
+    }
+
+    private void SetComponents()
+    {
         rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void SetWeapon()
+    {
+        weapon = new(baseDamage);
+    }
+
+    private void SetStats()
+    {
+        //se define a la vez live y max live
+        stats = new(live);
     }
 
     private void SetInput()
@@ -41,12 +61,17 @@ public class PlayerController : MonoBehaviour
 
         gameInput.Player.Move.performed += OnMove;
         gameInput.Player.Move.canceled += OnMove;
+
+        gameInput.Player.Attack.performed += OnAttack;
+        
     }
 
     private void OnDisable()
     {
         gameInput.Player.Move.performed -= OnMove;
         gameInput.Player.Move.canceled -= OnMove;
+
+        gameInput.Player.Attack.performed -= OnAttack;
     }
 
     private void OnMove(InputAction.CallbackContext ctx)
@@ -54,9 +79,27 @@ public class PlayerController : MonoBehaviour
         dirMove = ctx.ReadValue<Vector2>();
     }
 
+    private void OnAttack(InputAction.CallbackContext ctx)
+    {
+        if (cooldownAttack <= 0)
+        {
+            cooldownAttack = intialCooldownAttack;
+            Attack();
+        }
+    }
+
     private void FixedUpdate()
     {
         rb.linearVelocity = dirMove * playerSpeed;
+
+        CooldownAttackController();
+    }
+    private void CooldownAttackController()
+    {
+        if (cooldownAttack > 0)
+        {
+            cooldownAttack -= Time.fixedDeltaTime;
+        }
     }
 
     private void Attack()
