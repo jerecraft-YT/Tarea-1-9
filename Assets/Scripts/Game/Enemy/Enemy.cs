@@ -27,7 +27,12 @@ public class Enemy : MonoBehaviour
         if (live <= 0)
         {
             Destroy(gameObject);
-            Debug.Log("mori");
+            //Debug.Log("mori");
         }
+    }
+
+    private void OnDestroy()
+    {
+        Debug.log("Mori");
     }
 }
